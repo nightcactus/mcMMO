@@ -1,6 +1,13 @@
 package com.gmail.nossr50.util.platform;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.gmail.nossr50.mcMMO;
+import com.gmail.nossr50.util.MinecraftGameVersionFactory;
+import java.util.logging.Logger;
+import java.util.stream.Stream;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -9,11 +16,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-
-import java.util.logging.Logger;
-import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class MinecraftGameVersionTest {
 
@@ -81,7 +83,8 @@ class MinecraftGameVersionTest {
          * we will just simulate some "Spigot" version here, so that the test can
          * continue successfully.
          */
-        String serverSoftwareVersion = "git-Spigot-12345-abcdef (MC: " + major + '.' + minor + '.' + patch + ')';
+        String serverSoftwareVersion =
+                "git-Spigot-12345-abcdef (MC: " + major + '.' + minor + '.' + patch + ')';
 
         // Set up a mock plugin for logging.
         mcMMO plugin = Mockito.mock(mcMMO.class);
@@ -94,9 +97,8 @@ class MinecraftGameVersionTest {
             bukkit.when(Bukkit::getVersion).thenReturn(serverSoftwareVersion);
             bukkit.when(Bukkit::getBukkitVersion).thenReturn(gameVersion);
 
-            PlatformManager manager = new PlatformManager();
-            Platform platform = manager.getPlatform();
-            MinecraftGameVersion minecraftVersion = platform.getGameVersion();
+            final MinecraftGameVersion minecraftVersion
+                    = MinecraftGameVersionFactory.calculateGameVersion(gameVersion);
 
             assertEquals(major, minecraftVersion.getMajorVersion().asInt());
             assertEquals(minor, minecraftVersion.getMinorVersion().asInt());
@@ -111,19 +113,20 @@ class MinecraftGameVersionTest {
          * These samples were taken directly from the historical
          * data of CraftBukkit's pom.xml file:
          * https://hub.spigotmc.org/stash/projects/SPIGOT/repos/craftbukkit/browse/pom.xml
-         * 
+         *
          * We should be safe to assume that forks follow these conventions and do not mess
          * with this version number (Spigot, Paper and Tuinity do at least).
          */
         return Stream.of(
-            Arguments.of("1.13.2-R0.1-SNAPSHOT", 1, 13, 2),
-            Arguments.of("1.13-R0.2-SNAPSHOT", 1, 13, 0),
-            Arguments.of("1.13.2-R0.1-SNAPSHOT", 1, 13, 2),
-            Arguments.of("1.13-pre7-R0.1-SNAPSHOT", 1, 13, 0),
-            Arguments.of("1.14-pre5-SNAPSHOT", 1, 14, 0),
-            Arguments.of("1.15-R0.1-SNAPSHOT", 1, 15, 0),
-            Arguments.of("1.16.5-R0.1-SNAPSHOT", 1, 16, 5),
-            Arguments.of("1.17-R0.1-SNAPSHOT", 1, 17, 0)
+                Arguments.of("1.13.2-R0.1-SNAPSHOT", 1, 13, 2),
+                Arguments.of("1.13-R0.2-SNAPSHOT", 1, 13, 0),
+                Arguments.of("1.13.2-R0.1-SNAPSHOT", 1, 13, 2),
+                Arguments.of("1.13-pre7-R0.1-SNAPSHOT", 1, 13, 0),
+                Arguments.of("1.14-pre5-SNAPSHOT", 1, 14, 0),
+                Arguments.of("1.15-R0.1-SNAPSHOT", 1, 15, 0),
+                Arguments.of("1.16.5-R0.1-SNAPSHOT", 1, 16, 5),
+                Arguments.of("1.17-R0.1-SNAPSHOT", 1, 17, 0),
+                Arguments.of("1.21.11-106-0d768aa", 1, 21, 11)
         );
     }
 
